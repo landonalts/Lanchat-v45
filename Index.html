@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LanChat — Lobby & Global Chat</title>
+<style>
+  /* Your existing CSS remains unchanged */
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  #app {
+    background: rgba(0,0,0,0.45);
+    border-radius: 16px;
+    max-width: 520px;
+    width: 100%;
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    outline: none;
+    transition: box-shadow 0.3s ease;
+  }
+
+  input[type="text"]:focus {
+    box-shadow: 0 0 8px #ffd369;
+  }
+
+  button {
+    background: #ffd369;
+    border: none;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    border-radius: 12px;
+    font-weight: 700;
+    color: #2d2d2d;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(255, 211, 105, 0.6);
+    transition: background 0.3s ease, color 0.3s ease;
+    margin-bottom: 1rem;
+  }
+
+  button:hover {
+    background: #ffb800;
+    color: #1a1a1a;
+  }
+
+  #lobbyHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  #lobbyCode {
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 4px;
+    text-shadow: 0 0 8px #ffd369;
+  }
+
+  #playerCount {
+    font-style: italic;
+    color: #ffd369;
+  }
+
+  #messages {
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    height: 320px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.25);
+    white-space: pre-wrap;
+  }
+
+  .message {
+    margin-bottom: 0.75rem;
+    max-width: 80%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    font-weight: 600;
+    word-wrap: break-word;
+  }
+
+  .message.self {
+    background: #ffd369;
+    color: #2d2d2d;
+    margin-left: auto;
+    box-shadow: 0 1px 5px rgba(255, 211, 105, 0.9);
+  }
+
+  #chatInput {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  /* Bigger chat input box */
+  #chatMessageInput {
+    flex-grow: 1;
+    font-size: 1.2rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    font-weight: 600;
+    min-height: 48px;
+    resize: none;
+    line-height: 1.4;
+  }
+
+  #sendMessageBtn {
+    flex-shrink: 0;
+    width: 100px;
+  }
+
+  #imageUploadLobby {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+  }
+
+  #leaveLobbyBtn {
+    background: #e53e3e;
+    margin-top: 1rem;
+    box-shadow: 0 4px 10px rgba(229, 62, 62, 0.7);
+  }
+
+  /* Scrollbar styling */
+  #messages::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  #messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 211, 105, 0.6);
+    border-radius: 8px;
+  }
+
+  #messages::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Tabs for chat selection */
+  #chatTabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .tabBtn {
+    flex-grow: 1;
+    padding: 0.5rem 1rem;
+    background: #444;
+    color: #ddd;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+    transition: background 0.3s ease;
+  }
+
+  .tabBtn.active {
+    background: #ffd369;
+    color: #2d2d2d;
+    box-shadow: 0 4px 10px rgba(255, 211, 105, 0.6);
+  }
+
+  /* Global chat input styling update */
+  #globalChatInput {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #globalChatMessageInput {
+    flex-grow: 1;
+    font-size: 1.2rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    font-weight: 600;
+    min-height: 48px;
+    resize: none;
+    line-height: 1.4;
+  }
+
+  #sendGlobalMessageBtn {
+    flex-shrink: 0;
+    width: 100px;
+    background: #ffd369;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    color: #2d2d2d;
+    cursor: pointer;
+  }
+
+  #imageUploadGlobal {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+  }
+
+  #leaveGlobalBtn {
+    margin-top: 1rem;
+    background: #e53e3e;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(229, 62, 62, 0.7);
+    width: 100%;
+  }
+
+  /* Image message styling */
+  .message img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <h1>LanChat</h1>
+
+  <!-- Username input and join/create lobby -->
+  <div id="frontPage">
+    <input type="text" id="nameInput" placeholder="Enter your name (max 20 chars)" maxlength="20" autocomplete="off" />
+    <button id="proceedBtn">Proceed</button>
+  </div>
+
+  <!-- After username chosen -->
+  <div id="chatChoicePage" class="hidden">
+    <button id="createLobbyBtn">Create Lobby</button>
+    <input type="text" id="joinLobbyInput" placeholder="Enter lobby code (6 letters)" maxlength="6" autocomplete="off" style="text-transform: uppercase;" />
+    <button id="joinLobbyBtn">Join Lobby</button>
+    <button id="openGlobalChatBtn">Global Chat</button>
+  </div>
+
+  <!-- Lobby chat page -->
+  <div id="lobbyPage" class="hidden">
+    <div id="lobbyHeader">
+      <div id="lobbyCode"></div>
+      <div id="playerCount"></div>
+    </div>
+
+    <div id="messages" aria-live="polite" aria-relevant="additions"></div>
+
+    <form id="chatInput" aria-label="Send message">
+      <textarea id="chatMessageInput" placeholder="Type a message..." rows="2" maxlength="500"></textarea>
+      <input type="file" id="imageUploadLobby" accept="image/*" title="Upload Image" />
+      <button type="submit" id="sendMessageBtn">Send</button>
+    </form>
+
+    <button id="leaveLobbyBtn">Leave Lobby</button>
+  </div>
+
+  <!-- Global chat page -->
+  <div id="globalChatPage" class="hidden">
+    <div id="chatTabs">
+      <div class="tabBtn active" id="tabGlobal">Global</div>
+      <div class="tabBtn" id="tabLobby">Lobby</div>
+    </div>
+
+    <div id="globalMessages" aria-live="polite" aria-relevant="additions" style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem; height: 320px; overflow-y: auto; margin-bottom: 1rem;"></div>
+
+    <form id="globalChatInput" aria-label="Send message in global chat">
+      <textarea id="globalChatMessageInput" placeholder="Type a message..." rows="2" maxlength="500"></textarea>
+      <input type="file" id="imageUploadGlobal" accept="image/*" title="Upload Image" />
+      <button type="submit" id="sendGlobalMessageBtn">Send</button>
+    </form>
+
+    <button id="leaveGlobalBtn">Leave Global Chat</button>
+  </div>
+</div>
+
+<!-- Firebase scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<script>
+  // Firebase config - replace with your actual config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const storage = firebase.storage();
+
+  // State variables
+  let userName = '';
+  let lobbyCode = '';
+  let currentChat = 'none'; // 'lobby' or 'global' or 'none'
+
+  // DOM elements
+  const frontPage = document.getElementById('frontPage');
+  const chatChoicePage = document.getElementById('chatChoicePage');
+  const lobbyPage = document.getElementById('lobbyPage');
+  const globalChatPage = document.getElementById('globalChatPage');
+
+  const nameInput = document.getElementById('nameInput');
+  const proceedBtn = document.getElementById('proceedBtn');
+
+  const createLobbyBtn = document.getElementById('createLobbyBtn');
+  const joinLobbyInput = document.getElementById('joinLobbyInput');
+  const joinLobbyBtn = document.getElementById('joinLobbyBtn');
+  const openGlobalChatBtn = document.getElementById('openGlobalChatBtn');
+
+  const lobbyCodeDiv = document.getElementById('lobbyCode');
+  const playerCountDiv = document.getElementById('playerCount');
+  const messagesDiv = document.getElementById('messages');
+
+  const chatMessageInput = document.getElementById('chatMessageInput');
+  const sendMessageBtn = document.getElementById('sendMessageBtn');
+  const imageUploadLobby = document.getElementById('imageUploadLobby');
+  const leaveLobbyBtn = document.getElementById('leaveLobbyBtn');
+
+  const chatTabs = document.getElementById('chatTabs');
+  const tabGlobal = document.getElementById('tabGlobal');
+  const tabLobby = document.getElementById('tabLobby');
+
+  const globalMessagesDiv = document.getElementById('globalMessages');
+  const globalChatMessageInput = document.getElementById('globalChatMessageInput');
+  const sendGlobalMessageBtn = document.getElementById('sendGlobalMessageBtn');
+  const imageUploadGlobal = document.getElementById('imageUploadGlobal');
+  const leaveGlobalBtn = document.getElementById('leaveGlobalBtn');
+
+  // Proceed button handler (enter username)
+  proceedBtn.addEventListener('click', () => {
+    const name = nameInput.value.trim();
+    if (name.length < 1 || name.length > 20) {
+      alert('Please enter a name between 1 and 20 characters.');
+      return;
+    }
+    userName = name;
+    frontPage.classList.add('hidden');
+    chatChoicePage.classList.remove('hidden');
+  });
+
+  // Create lobby button
+  createLobbyBtn.addEventListener('click', () => {
+    lobbyCode = generateLobbyCode();
+    joinLobby(lobbyCode, true);
+  });
+
+  // Join lobby button
+  joinLobbyBtn.addEventListener('click', () => {
+    const code = joinLobbyInput.value.trim().toUpperCase();
+    if (code.length !== 6) {
+      alert('Lobby code must be exactly 6 letters.');
+      return;
+    }
+    joinLobby(code, false);
+  });
+
+  // Open global chat button
+  openGlobalChatBtn.addEventListener('click', () => {
+    currentChat = 'global';
+    chatChoicePage.classList.add('hidden');
+    globalChatPage.classList.remove('hidden');
+    tabGlobal.classList.add('active');
+    tabLobby.classList.remove('active');
+    listenGlobalChat();
+  });
+
+  // Tab switching
+  tabGlobal.addEventListener('click', () => {
+    if (currentChat === 'global') return;
+    currentChat = 'global';
+    tabGlobal.classList.add('active');
+    tabLobby.classList.remove('active');
+    lobbyPage.classList.add('hidden');
+    globalChatPage.classList.remove('hidden');
+    listenGlobalChat();
+  });
+
+  tabLobby.addEventListener('click', () => {
+    if (currentChat !== 'global' || !lobbyCode) return;
+    currentChat = 'lobby';
+    tabLobby.classList.add('active');
+    tabGlobal.classList.remove('active');
+    globalChatPage.classList.add('hidden');
+    lobbyPage.classList.remove('hidden');
+  });
+
+  // Leave lobby
+  leaveLobbyBtn.addEventListener('click', () => {
+    leaveLobby();
+  });
+
+  // Leave global chat
+  leaveGlobalBtn.addEventListener('click', () => {
+    globalChatPage.classList.add('hidden');
+    chatChoicePage.classList.remove('hidden');
+    currentChat = 'none';
+  });
+
+  // Lobby chat send message
+  document.getElementById('chatInput').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = chatMessageInput.value.trim();
+    if (text.length === 0) return;
+
+    sendLobbyMessage({ text, imageUrl: null });
+    chatMessageInput.value = '';
+  });
+
+  // Global chat send message
+  document.getElementById('globalChatInput').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = globalChatMessageInput.value.trim();
+    if (text.length === 0) return;
+
+    sendGlobalMessage({ text, imageUrl: null });
+    globalChatMessageInput.value = '';
+  });
+
+  // Image upload handlers
+  imageUploadLobby.addEventListener('change', async (e) => {
+    if (!lobbyCode) {
+      alert('Join a lobby first!');
+      imageUploadLobby.value = '';
+      return;
+    }
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image file.');
+      imageUploadLobby.value = '';
+      return;
+    }
+
+    // Upload image to Firebase Storage and send message with image URL
+    try {
+      const url = await uploadImageToStorage(file, lobbyCode);
+      sendLobbyMessage({ text: null, imageUrl: url });
+    } catch (err) {
+      alert('Failed to upload image: ' + err.message);
+    }
+    imageUploadLobby.value = '';
+  });
+
+  imageUploadGlobal.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image file.');
+      imageUploadGlobal.value = '';
+      return;
+    }
+
+    try {
+      const url = await uploadImageToStorage(file, 'global');
+      sendGlobalMessage({ text: null, imageUrl: url });
+    } catch (err) {
+      alert('Failed to upload image: ' + err.message);
+    }
+    imageUploadGlobal.value = '';
+  });
+
+  // Upload image helper function
+  async function uploadImageToStorage(file, folder) {
+    const timestamp = Date.now();
+    const fileName = `${folder}/${userName}_${timestamp}_${file.name}`;
+    const storageRef = storage.ref().child(fileName);
+    const snapshot = await storageRef.put(file);
+    const downloadURL = await snapshot.ref.getDownloadURL();
+    return downloadURL;
+  }
+
+  // Generate random lobby code
+  function generateLobbyCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  // Join lobby function
+  async function joinLobby(code, create) {
+    lobbyCode = code;
+    lobbyCodeDiv.textContent = `Lobby: ${lobbyCode}`;
+    playerCountDiv.textContent = 'Players: 1'; // We'll improve player count later
+
+    chatChoicePage.classList.add('hidden');
+    lobbyPage.classList.remove('hidden');
+    currentChat = 'lobby';
+
+    messagesDiv.innerHTML = '';
+
+    // Add user to lobby players
+    const playerRef = db.ref(`lobbies/${lobbyCode}/players/${userName}`);
+    await playerRef.set(true);
+    playerRef.onDisconnect().remove();
+
+    listenLobbyMessages();
+
+    updatePlayerCount();
+
+    // On page unload or leave lobby, remove user from players list
+    window.addEventListener('beforeunload', () => {
+      playerRef.remove();
+    });
+  }
+
+  // Leave lobby function
+  async function leaveLobby() {
+    if (!lobbyCode) return;
+    await db.ref(`lobbies/${lobbyCode}/players/${userName}`).remove();
+    lobbyCode = '';
+    currentChat = 'none';
+    lobbyPage.classList.add('hidden');
+    chatChoicePage.classList.remove('hidden');
+    messagesDiv.innerHTML = '';
+  }
+
+  // Listen to lobby messages
+  function listenLobbyMessages() {
+    const lobbyMessagesRef = db.ref(`lobbies/${lobbyCode}/messages`);
+    lobbyMessagesRef.off();
+
+    lobbyMessagesRef.on('child_added', (snapshot) => {
+      const msg = snapshot.val();
+      appendMessage(messagesDiv, msg);
+    });
+  }
+
+  // Listen to global chat messages
+  function listenGlobalChat() {
+    const globalMessagesRef = db.ref(`globalMessages`);
+    globalMessagesRef.off();
+
+    globalMessagesRef.on('child_added', (snapshot) => {
+      const msg = snapshot.val();
+      appendMessage(globalMessagesDiv, msg);
+    });
+  }
+
+  // Send lobby message
+  async function sendLobbyMessage({ text, imageUrl }) {
+    if (!lobbyCode) return;
+    const msgData = {
+      sender: userName,
+      text: text || null,
+      imageUrl: imageUrl || null,
+      timestamp: Date.now()
+    };
+    await db.ref(`lobbies/${lobbyCode}/messages`).push(msgData);
+  }
+
+  // Send global message
+  async function sendGlobalMessage({ text, imageUrl }) {
+    const msgData = {
+      sender: userName,
+      text: text || null,
+      imageUrl: imageUrl || null,
+      timestamp: Date.now()
+    };
+    await db.ref('globalMessages').push(msgData);
+  }
+
+  // Append message to chat container
+  function appendMessage(container, msg) {
+    const div = document.createElement('div');
+    div.classList.add('message');
+    if (msg.sender === userName) div.classList.add('self');
+
+    const time = new Date(msg.timestamp);
+    const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Compose message content with optional image
+    let content = `<strong>${escapeHtml(msg.sender)}</strong> <span style="font-size: 0.75rem; opacity: 0.7;">${timeString}</span><br/>`;
+
+    if (msg.text) {
+      content += escapeHtml(msg.text);
+    }
+    if (msg.imageUrl) {
+      content += `<br/><img src="${escapeHtml(msg.imageUrl)}" alt="User uploaded image" loading="lazy" />`;
+    }
+
+    div.innerHTML = content;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  // Update player count in lobby
+  function updatePlayerCount() {
+    const playersRef = db.ref(`lobbies/${lobbyCode}/players`);
+    playersRef.on('value', (snapshot) => {
+      const players = snapshot.val() || {};
+      const count = Object.keys(players).length;
+      playerCountDiv.textContent = `Players: ${count}`;
+    });
+  }
+
+  // Escape HTML to prevent injection
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>"']/g, function(m) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m];
+    });
+  }
+</script>
+</body>
+</html>
